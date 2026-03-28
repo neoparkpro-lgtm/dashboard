@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>멘토 보고서 업로드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1A3A5C;--blue:#2563EB;--lblue:#DBEAFE;--green:#16A34A;--lgreen:#DCFCE7;--border:#E2E8F0;--text:#0F172A;--muted:#64748B;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:#EEF2F7;color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:var(--navy);color:#fff;padding:0 24px;height:52px;display:flex;align-items:center;gap:12px;}
+.logo{font-size:14px;font-weight:600;}
+.badge{background:rgba(255,255,255,0.15);font-size:11px;padding:3px 10px;border-radius:20px;}
+.wrap{max-width:680px;margin:32px auto;padding:0 16px;width:100%;}
+.card{background:#fff;border-radius:16px;border:1px solid var(--border);padding:32px;}
+.card-title{font-size:18px;font-weight:600;margin-bottom:6px;}
+.card-desc{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.6;}
+
+.field{margin-bottom:20px;}
+.label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;display:block;}
+.label .req{color:#DC2626;margin-left:2px;}
+select,input[type=text],input[type=date],textarea{
+  width:100%;border:1.5px solid var(--border);border-radius:8px;
+  padding:10px 14px;font-size:13px;font-family:'Noto Sans KR',sans-serif;
+  color:var(--text);outline:none;background:#fff;transition:border .15s;
+}
+select:focus,input[type=text]:focus,input[type=date]:focus,textarea:focus{border-color:var(--blue);}
+textarea{resize:vertical;min-height:100px;line-height:1.6;}
+
+/* 파일 드롭존 */
+.dropzone{border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFBFC;}
+.dropzone:hover,.dropzone.drag{border-color:var(--blue);background:var(--lblue);}
+.dropzone-icon{font-size:32px;margin-bottom:10px;}
+.dropzone-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.dropzone-sub{font-size:12px;color:var(--muted);}
+.dropzone input{display:none;}
+.file-preview{display:none;margin-top:12px;padding:12px 14px;background:var(--lgreen);border-radius:8px;border:1px solid #BBF7D0;display:flex;align-items:center;gap:10px;}
+.file-preview.show{display:flex;}
+.file-icon{font-size:20px;}
+.file-info{flex:1;}
+.file-name{font-size:12px;font-weight:500;color:#15803D;}
+.file-size{font-size:11px;color:#16A34A;}
+.file-remove{font-size:14px;color:#DC2626;cursor:pointer;background:none;border:none;padding:0;}
+
+/* KPI 슬라이더 */
+.kpi-row{display:flex;align-items:center;gap:12px;}
+.kpi-row input[type=range]{flex:1;}
+.kpi-val{font-size:15px;font-weight:600;min-width:40px;text-align:right;}
+.kpi-bar{height:6px;background:#F1F5F9;border-radius:3px;overflow:hidden;margin-top:6px;}
+.kpi-fill{height:6px;border-radius:3px;background:var(--green);transition:width .3s;}
+
+/* 제출 버튼 */
+.submit-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:600;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:background .15s;margin-top:8px;}
+.submit-btn:hover{background:#243f5c;}
+.submit-btn:disabled{background:#94A3B8;cursor:not-allowed;}
+
+/* 진행 상태 */
+.progress-wrap{display:none;margin-top:16px;}
+.progress-wrap.show{display:block;}
+.progress-bar-outer{height:8px;background:#F1F5F9;border-radius:4px;overflow:hidden;margin:8px 0;}
+.progress-bar-inner{height:8px;background:var(--blue);border-radius:4px;width:0;transition:width .4s;}
+.progress-label{font-size:12px;color:var(--muted);text-align:center;}
+
+/* 성공 화면 */
+.success-screen{display:none;text-align:center;padding:20px 0;}
+.success-screen.show{display:block;}
+.success-icon{font-size:48px;margin-bottom:16px;}
+.success-title{font-size:18px;font-weight:600;margin-bottom:8px;}
+.success-desc{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.success-btn{padding:10px 28px;border-radius:8px;border:1px solid var(--border);background:#fff;font-family:'Noto Sans KR',sans-serif;font-size:13px;cursor:pointer;}
+
+/* URL 설정 배너 */
+.url-banner{background:var(--lblue);border:1px solid #BFDBFE;border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start;}
+.url-banner-icon{font-size:16px;margin-top:1px;}
+.url-banner-text{font-size:12px;color:#1E40AF;line-height:1.6;}
+.url-set-row{display:flex;gap:8px;margin-top:8px;}
+.url-set-input{flex:1;border:1px solid #BFDBFE;border-radius:6px;padding:6px 10px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:#fff;color:var(--text);outline:none;}
+.url-set-btn{padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;}
+
+/* 에러 */
+.field-err{font-size:11px;color:#DC2626;margin-top:4px;display:none;}
+.field-err.show{display:block;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">노쇼 제로</div>
+  <div class="badge">멘토 보고서 업로드</div>
+</div>
+
+<div class="wrap">
+  <!-- URL 설정 배너 -->
+  <div class="url-banner" id="urlBanner">
+    <div class="url-banner-icon">🔗</div>
+    <div class="url-banner-text">
+      Apps Script URL이 설정되지 않았습니다. 대시보드에서 설정하거나 아래에 직접 입력하세요.
+      <div class="url-set-row">
+        <input class="url-set-input" id="urlSetInput" placeholder="https://script.google.com/macros/s/.../exec">
+        <button class="url-set-btn" onclick="setUrl()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="formCard">
+    <div class="card-title">멘토링 보고서 업로드</div>
+    <div class="card-desc">작성한 보고서(Word/PDF)를 업로드하면 해당 기업의 대시보드에 자동으로 연결됩니다.</div>
+
+    <div class="field">
+      <label class="label">담당 기업명 <span class="req">*</span></label>
+      <select id="fCompany">
+        <option value="">기업을 선택하세요</option>
+      </select>
+      <div class="field-err" id="errCompany">기업을 선택해 주세요.</div>
+    </div>
+
+    <div class="field">
+      <label class="label">담당 멘토명 <span class="req">*</span></label>
+      <input type="text" id="fMentor" placeholder="예: 김멘토">
+      <div class="field-err" id="errMentor">멘토명을 입력해 주세요.</div>
+    </div>
+
+    <div class="field">
+      <label class="label">보고서 제목 <span class="req">*</span></label>
+      <input type="text" id="fTitle" placeholder="예: 3월 3주차 멘토링 보고서">
+      <div class="field-err" id="errTitle">보고서 제목을 입력해 주세요.</div>
+    </div>
+
+    <div class="field">
+      <label class="label">멘토링 날짜 <span class="req">*</span></label>
+      <input type="date" id="fDate">
+    </div>
+
+    <div class="field">
+      <label class="label">이번 회차 KPI 진척도</label>
+      <div class="kpi-row">
+        <input type="range" id="fKpi" min="0" max="100" value="50" oninput="updateKpi(this.value)">
+        <div class="kpi-val" id="kpiVal">50%</div>
+      </div>
+      <div class="kpi-bar"><div class="kpi-fill" id="kpiFill" style="width:50%"></div></div>
+    </div>
+
+    <div class="field">
+      <label class="label">주요 멘토링 내용 <span class="req">*</span></label>
+      <textarea id="fContent" placeholder="이번 회차 멘토링에서 다룬 주요 내용, 기업의 진척 상황, 주요 이슈 등을 작성해 주세요."></textarea>
+      <div class="field-err" id="errContent">멘토링 내용을 입력해 주세요.</div>
+    </div>
+
+    <div class="field">
+      <label class="label">다음 회차 계획</label>
+      <textarea id="fNextPlan" placeholder="다음 멘토링에서 다룰 내용, 기업에 요청할 사항 등을 작성해 주세요." style="min-height:70px;"></textarea>
+    </div>
+
+    <div class="field">
+      <label class="label">보고서 파일 첨부 <span class="req">*</span></label>
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+        <div class="dropzone-icon">📄</div>
+        <div class="dropzone-title">파일을 클릭하거나 드래그하여 업로드</div>
+        <div class="dropzone-sub">Word(.docx), PDF(.pdf) · 최대 20MB</div>
+        <input type="file" id="fileInput" accept=".docx,.doc,.pdf" onchange="onFileSelect(event)">
+      </div>
+      <div class="file-preview" id="filePreview">
+        <div class="file-icon" id="fileIcon">📄</div>
+        <div class="file-info">
+          <div class="file-name" id="fileName"></div>
+          <div class="file-size" id="fileSize"></div>
+        </div>
+        <button class="file-remove" onclick="removeFile()">✕</button>
+      </div>
+      <div class="field-err" id="errFile">보고서 파일을 첨부해 주세요.</div>
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+      <div class="progress-label" id="progressLabel">업로드 준비 중...</div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitReport()">보고서 업로드하기</button>
+  </div>
+
+  <!-- 성공 화면 -->
+  <div class="card success-screen" id="successScreen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">보고서가 업로드되었습니다</div>
+    <div class="success-desc" id="successDesc">보고서가 성공적으로 등록되었습니다.<br>대시보드에서 기업 상세페이지를 확인하세요.</div>
+    <button class="success-btn" onclick="resetForm()">다른 보고서 업로드하기</button>
+  </div>
+</div>
+
+<script>
+var API_URL = localStorage.getItem("dUrlV2") || "";
+var selectedFile = null;
+
+window.onload = function(){
+  if(API_URL){
+    document.getElementById("urlBanner").style.display="none";
+    loadCompanies();
+  }
+  var today = new Date().toISOString().substring(0,10);
+  document.getElementById("fDate").value = today;
+};
+
+function setUrl(){
+  var u = document.getElementById("urlSetInput").value.trim();
+  if(!u || !u.includes("script.google.com")){alert("올바른 URL을 입력해 주세요.");return;}
+  localStorage.setItem("dUrlV2", u);
+  API_URL = u;
+  document.getElementById("urlBanner").style.display="none";
+  loadCompanies();
+}
+
+async function loadCompanies(){
+  if(!API_URL) return;
+  try{
+    var r = await fetch(API_URL + "?action=companies");
+    var d = await r.json();
+    var sel = document.getElementById("fCompany");
+    (d||[]).forEach(function(c){
+      var opt = document.createElement("option");
+      opt.value = c.기업명; opt.textContent = c.기업명;
+      sel.appendChild(opt);
+    });
+  }catch(e){ console.log("기업 목록 로드 실패", e); }
+}
+
+function updateKpi(v){
+  document.getElementById("kpiVal").textContent = v + "%";
+  document.getElementById("kpiFill").style.width = v + "%";
+  var fill = document.getElementById("kpiFill");
+  fill.style.background = v>=80?"#16A34A":v>=60?"#D97706":"#DC2626";
+}
+
+function onDrag(e, over){ e.preventDefault(); document.getElementById("dropzone").classList.toggle("drag", over); }
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById("dropzone").classList.remove("drag");
+  var f = e.dataTransfer.files[0];
+  if(f) handleFile(f);
+}
+function onFileSelect(e){ var f = e.target.files[0]; if(f) handleFile(f); }
+
+function handleFile(f){
+  var ext = f.name.split('.').pop().toLowerCase();
+  if(!['pdf','doc','docx'].includes(ext)){alert("Word(.docx) 또는 PDF 파일만 업로드 가능합니다.");return;}
+  if(f.size > 20*1024*1024){alert("파일 크기는 20MB 이하여야 합니다.");return;}
+  selectedFile = f;
+  document.getElementById("fileIcon").textContent = ext==='pdf'?"📕":"📘";
+  document.getElementById("fileName").textContent = f.name;
+  document.getElementById("fileSize").textContent = (f.size/1024/1024).toFixed(2)+" MB";
+  document.getElementById("filePreview").classList.add("show");
+  document.getElementById("errFile").classList.remove("show");
+}
+
+function removeFile(){
+  selectedFile = null;
+  document.getElementById("filePreview").classList.remove("show");
+  document.getElementById("fileInput").value = "";
+}
+
+function validate(){
+  var ok = true;
+  function check(id, errId, val){if(!val){document.getElementById(errId).classList.add("show");ok=false;}else{document.getElementById(errId).classList.remove("show");}}
+  check("fCompany","errCompany",document.getElementById("fCompany").value);
+  check("fMentor","errMentor",document.getElementById("fMentor").value.trim());
+  check("fTitle","errTitle",document.getElementById("fTitle").value.trim());
+  check("fContent","errContent",document.getElementById("fContent").value.trim());
+  if(!selectedFile){document.getElementById("errFile").classList.add("show");ok=false;}else{document.getElementById("errFile").classList.remove("show");}
+  return ok;
+}
+
+async function submitReport(){
+  if(!validate()) return;
+  if(!API_URL){alert("Apps Script URL을 먼저 설정해 주세요.");return;}
+
+  var btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.textContent = "업로드 중...";
+  document.getElementById("progressWrap").classList.add("show");
+  setProgress(10,"파일 읽는 중...");
+
+  try{
+    var base64 = await toBase64(selectedFile);
+    setProgress(40,"서버에 전송 중...");
+
+    var payload = {
+      action:    "uploadReport",
+      기업명:    document.getElementById("fCompany").value,
+      담당멘토:  document.getElementById("fMentor").value.trim(),
+      제목:      document.getElementById("fTitle").value.trim(),
+      날짜:      document.getElementById("fDate").value,
+      KPI진척도: parseInt(document.getElementById("fKpi").value),
+      내용:      document.getElementById("fContent").value.trim(),
+      다음계획:  document.getElementById("fNextPlan").value.trim(),
+      파일명:    selectedFile.name,
+      파일타입:  selectedFile.type,
+      파일데이터: base64
+    };
+
+    setProgress(70,"보고서 등록 중...");
+
+    var r = await fetch(API_URL, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    var d = await r.json();
+    if(d.error) throw new Error(d.error);
+
+    setProgress(100,"완료!");
+    setTimeout(function(){
+      document.getElementById("formCard").style.display="none";
+      document.getElementById("successDesc").innerHTML =
+        "<strong>"+document.getElementById("fTitle").value+"</strong><br>"+
+        document.getElementById("fCompany").value+" 기업 대시보드에 등록되었습니다.";
+      document.getElementById("successScreen").classList.add("show");
+    }, 600);
+
+  }catch(e){
+    setProgress(0,"");
+    document.getElementById("progressWrap").classList.remove("show");
+    alert("업로드 실패: "+e.message+"\n\nApps Script URL과 권한 설정을 확인해 주세요.");
+    btn.disabled=false;btn.textContent="보고서 업로드하기";
+  }
+}
+
+function setProgress(pct, label){
+  document.getElementById("progressBar").style.width = pct+"%";
+  document.getElementById("progressLabel").textContent = label;
+}
+
+function toBase64(file){
+  return new Promise(function(res,rej){
+    var r=new FileReader();
+    r.onload=function(){res(r.result.split(",")[1]);};
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function resetForm(){
+  document.getElementById("successScreen").classList.remove("show");
+  document.getElementById("formCard").style.display="block";
+  document.getElementById("fCompany").value="";
+  document.getElementById("fTitle").value="";
+  document.getElementById("fContent").value="";
+  document.getElementById("fNextPlan").value="";
+  document.getElementById("fKpi").value=50;
+  updateKpi(50);
+  removeFile();
+  document.getElementById("progressWrap").classList.remove("show");
+  document.getElementById("submitBtn").disabled=false;
+  document.getElementById("submitBtn").textContent="보고서 업로드하기";
+}
+</script>
+</body>
+</html>
