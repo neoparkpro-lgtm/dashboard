@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>노쇼 제로 대시보드 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#1A3A5C;--blue:#2563EB;--lblue:#DBEAFE;
+  --green:#16A34A;--lgreen:#DCFCE7;
+  --amber:#D97706;--lamber:#FEF3C7;
+  --red:#DC2626;--lred:#FEE2E2;
+  --border:#E2E8F0;--text:#0F172A;--muted:#64748B;
+  --bg:#EEF2F7;--surface:#fff;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+
+/* ── 탑바 ── */
+.topbar{background:var(--navy);color:#fff;padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.tl{display:flex;align-items:center;gap:10px;}
+.logo{font-size:14px;font-weight:600;}
+.live-b{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.12);padding:3px 10px;border-radius:20px;font-size:11px;}
+.ldot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink 1.8s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.tr{display:flex;align-items:center;gap:8px;}
+.sinfo{font-size:11px;color:rgba(255,255,255,0.55);}
+.topbtn{font-size:11px;color:rgba(255,255,255,0.75);background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:4px 12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.topbtn:hover{background:rgba(255,255,255,0.18);}
+
+/* ── 셋업 오버레이 ── */
+.setup-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;}
+.setup-card{background:#fff;border-radius:16px;border:1px solid var(--border);padding:36px 40px;max-width:520px;width:100%;}
+.slogo{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+.slogo-badge{background:var(--navy);color:#fff;font-size:12px;font-weight:600;padding:5px 12px;border-radius:8px;}
+.slogo-text{font-size:16px;font-weight:600;}
+.stitle{font-size:18px;font-weight:600;margin-bottom:6px;}
+.sdesc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;}
+.srow{display:flex;gap:12px;margin-bottom:10px;}
+.snum{width:22px;height:22px;border-radius:50%;background:var(--lblue);color:#1E40AF;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.stext{font-size:12px;color:var(--muted);line-height:1.6;}
+.stext strong{color:var(--text);font-weight:600;}
+.ulabel{font-size:12px;font-weight:600;margin:18px 0 6px;}
+.uinput{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;font-family:'Noto Sans KR',sans-serif;color:var(--text);outline:none;}
+.uinput:focus{border-color:var(--blue);}
+.uinput::placeholder{color:#CBD5E1;}
+.uerr{font-size:12px;color:var(--red);margin-top:5px;display:none;}
+.connbtn{width:100%;margin-top:10px;background:var(--navy);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
+.demobtn{width:100%;margin-top:8px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
+
+/* ── 메인 ── */
+.main{max-width:1280px;margin:0 auto;padding:20px 16px;}
+.kgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;}
+.kc{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid var(--border);position:relative;overflow:hidden;}
+.kc::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;}
+.kc.cb::before{background:var(--blue);}.kc.cg::before{background:var(--green);}
+.kc.ca::before{background:var(--amber);}.kc.cr::before{background:var(--red);}.kc.cp::before{background:#7C3AED;}
+.kl{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;}
+.kv{font-size:24px;font-weight:600;line-height:1;}.kv span{font-size:12px;font-weight:400;color:var(--muted);margin-left:2px;}
+.ks{font-size:11px;margin-top:4px;}.ks.up{color:var(--green);}.ks.dn{color:var(--red);}
+
+.g2{display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:14px;}
+.g2b{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:18px;}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.ct{font-size:13px;font-weight:600;}
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{font-size:11px;color:var(--muted);font-weight:500;text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody td{padding:9px 10px;border-bottom:1px solid #F1F5F9;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#FAFBFC;}
+.cn{font-weight:500;font-size:12px;}.cs{font-size:10px;color:var(--muted);}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;}
+.bg{background:var(--lgreen);color:#15803D;}.br{background:var(--lred);color:#991B1B;}
+.bb{background:var(--lblue);color:#1E40AF;}.by{background:#EDE9FE;color:#5B21B6;}
+.pw{width:100%;height:5px;background:#F1F5F9;border-radius:3px;overflow:hidden;}
+.pb{height:5px;border-radius:3px;}.pg{background:var(--green);}.pa{background:var(--amber);}.prd{background:var(--red);}
+.ai{display:flex;gap:10px;padding:10px 12px;border-radius:8px;margin-bottom:8px;}
+.ai:last-child{margin-bottom:0;}
+.aw{background:#FFFBEB;border:1px solid #FDE68A;}.aib{background:#EFF6FF;border:1px solid #BFDBFE;}.ao{background:#F0FDF4;border:1px solid #BBF7D0;}
+.aico{font-size:14px;flex-shrink:0;margin-top:1px;}
+.att{font-size:12px;font-weight:600;}.adc{font-size:11px;color:var(--muted);margin-top:2px;}
+.fbar{display:flex;gap:5px;}
+.fb{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+.fb.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+.loading{text-align:center;padding:60px;color:var(--muted);}
+.spin{display:inline-block;width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.click-row{cursor:pointer;}
+.click-row:hover td{background:#EFF6FF;}
+.detail-link{font-size:11px;color:var(--blue);text-decoration:none;cursor:pointer;}
+
+/* ── 상세페이지 모달 ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.45);z-index:300;overflow-y:auto;padding:20px;}
+.modal-bg.open{display:flex;align-items:flex-start;justify-content:center;}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:900px;overflow:hidden;margin:auto;}
+.modal-topbar{background:var(--navy);color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:15px;font-weight:600;}
+.modal-sub{font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px;}
+.modal-close{background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:18px;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:'Noto Sans KR',sans-serif;}
+.modal-body{padding:24px;}
+.modal-kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.mkc{background:var(--bg);border-radius:10px;padding:12px 14px;}
+.mkl{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.mkv{font-size:20px;font-weight:600;}.mkv span{font-size:12px;font-weight:400;color:var(--muted);}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.modal-section{margin-bottom:20px;}
+.msec-title{font-size:13px;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.report-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;}
+.report-item:last-child{margin-bottom:0;}
+.report-info{display:flex;flex-direction:column;gap:2px;}
+.report-name{font-size:12px;font-weight:500;}
+.report-meta{font-size:11px;color:var(--muted);}
+.report-dl{font-size:11px;color:var(--blue);text-decoration:none;padding:4px 10px;border:1px solid var(--lblue);border-radius:6px;background:var(--lblue);color:#1E40AF;cursor:pointer;}
+.report-dl:hover{background:#BFDBFE;}
+.empty-state{text-align:center;padding:24px;color:var(--muted);font-size:12px;}
+.modal-spin{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);}
+
+@media(max-width:900px){
+  .kgrid{grid-template-columns:repeat(2,1fr);}
+  .g2{grid-template-columns:1fr;}.g2b{grid-template-columns:1fr;}
+  .modal-grid{grid-template-columns:1fr;}
+  .modal-kgrid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:480px){.kgrid{grid-template-columns:1fr 1fr;}.setup-card{padding:24px 20px;}}
+</style>
+</head>
+<body>
+
+<!-- 셋업 -->
+<div class="setup-overlay" id="sov">
+  <div class="setup-card">
+    <div class="slogo"><div class="slogo-badge">노쇼 제로 v2</div><div class="slogo-text">기업 성장 관리 대시보드</div></div>
+    <div class="stitle">Apps Script URL을 입력해 주세요</div>
+    <div class="sdesc">구글 시트와 대시보드를 연결합니다. URL은 이 기기에만 저장됩니다.</div>
+    <div class="srow"><div class="snum">1</div><div class="stext">구글 시트 → <strong>확장 프로그램 → Apps Script</strong> → Code_v2.gs 붙여넣기</div></div>
+    <div class="srow"><div class="snum">2</div><div class="stext"><strong>배포 → 새 배포</strong> → 유형: 웹 앱 → 액세스: 모든 사용자</div></div>
+    <div class="srow"><div class="snum">3</div><div class="stext">생성된 <strong>웹 앱 URL</strong>을 아래에 붙여넣기</div></div>
+    <div class="ulabel">Apps Script 웹 앱 URL</div>
+    <input class="uinput" id="uinput" type="url" placeholder="https://script.google.com/macros/s/.../exec">
+    <div class="uerr" id="uerr">올바른 Apps Script URL을 입력해 주세요.</div>
+    <button class="connbtn" onclick="connect()">대시보드 연결하기</button>
+    <button class="demobtn" onclick="demo()">📊 샘플 데이터로 미리보기</button>
+  </div>
+</div>
+
+<!-- 대시보드 -->
+<div id="dbwrap" style="display:none;">
+  <div class="topbar">
+    <div class="tl"><div class="logo">노쇼 제로 대시보드</div><div class="live-b"><div class="ldot"></div>실시간</div></div>
+    <div class="tr">
+      <div class="sinfo" id="sinfo">로딩 중...</div>
+      <button class="topbtn" onclick="openUpload()">📄 보고서 업로드</button>
+      <button class="topbtn" onclick="changeUrl()">URL 변경</button>
+    </div>
+  </div>
+  <div class="main">
+    <div id="larea" class="loading"><div class="spin"></div><div>데이터 불러오는 중...</div></div>
+    <div id="darea" style="display:none;">
+      <!-- KPI 카드 5개 -->
+      <div class="kgrid">
+        <div class="kc cb"><div class="kl">총 참여 기업</div><div class="kv" id="k1">—<span>개사</span></div><div class="ks up" id="k1s"></div></div>
+        <div class="kc cg"><div class="kl">평균 교육 출석률</div><div class="kv" id="k2">—<span>%</span></div><div class="ks up" id="k2s"></div></div>
+        <div class="kc ca"><div class="kl">누적 멘토링 횟수</div><div class="kv" id="k3">—<span>회</span></div><div class="ks up"></div></div>
+        <div class="kc cr"><div class="kl">노쇼 발생 건수</div><div class="kv" id="k4">—<span>건</span></div><div class="ks dn" id="k4s"></div></div>
+        <div class="kc cp"><div class="kl">누적 멘토 보고서</div><div class="kv" id="k5">—<span>건</span></div><div class="ks up"></div></div>
+      </div>
+      <div class="g2">
+        <!-- 기업 테이블 -->
+        <div class="card">
+          <div class="ch">
+            <div class="ct">참여 기업 현황 <span style="font-size:11px;color:var(--muted);font-weight:400;">— 기업명 클릭 시 상세보기</span></div>
+            <div class="fbar">
+              <button class="fb on" onclick="fco('all',this)">전체</button>
+              <button class="fb" onclick="fco('정상',this)">정상</button>
+              <button class="fb" onclick="fco('주의',this)">주의</button>
+            </div>
+          </div>
+          <div class="tw"><table>
+            <thead><tr><th>기업명</th><th>멘토링</th><th>출석률</th><th>KPI 달성도</th><th>보고서</th><th>투자 미팅</th><th>상태</th></tr></thead>
+            <tbody id="cbody"></tbody>
+          </table></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div class="card"><div class="ch"><div class="ct">KPI 달성도</div></div><div style="position:relative;height:185px;"><canvas id="kc"></canvas></div></div>
+          <div class="card"><div class="ch"><div class="ct">알림 &amp; 액션</div></div><div id="alarea"></div></div>
+        </div>
+      </div>
+      <div class="g2b">
+        <div class="card"><div class="ch"><div class="ct">출석률 현황</div></div><div style="position:relative;height:155px;"><canvas id="ac"></canvas></div></div>
+        <div class="card"><div class="ch"><div class="ct">투자사 미팅 현황</div></div><div style="position:relative;height:155px;"><canvas id="mc"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ★ 기업 상세 모달 ★ -->
+<div class="modal-bg" id="modalBg" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-topbar">
+      <div>
+        <div class="modal-title" id="modalTitle">기업명</div>
+        <div class="modal-sub" id="modalSub">담당멘토 | 분야</div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div class="modal-spin"><div class="spin"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var allCo=[],kC,aC,mC,curUrl="",demoMode=false;
+var PRESET_URL="https://script.google.com/macros/s/AKfycbwbe00t8sNV_Gb1M3wGDTEQ7QEDI2-pEY352xYxxoWGMXOWQWeoV3Lg5BKLtZu9V1rE-A/exec";
+window.onload=function(){
+  curUrl=PRESET_URL;
+  demoMode=false;
+  document.getElementById("sov").style.display="none";
+  document.getElementById("dbwrap").style.display="block";
+  load(PRESET_URL);
+};
+
+function connect(){
+  var u=document.getElementById("uinput").value.trim();
+  if(!u||!u.includes("script.google.com")){document.getElementById("uerr").style.display="block";return;}
+  document.getElementById("uerr").style.display="none";
+  localStorage.setItem("dUrlV2",u);curUrl=u;demoMode=false;
+  showDB();load(u);
+}
+function changeUrl(){document.getElementById("sov").style.display="flex";document.getElementById("dbwrap").style.display="none";}
+function showDB(){document.getElementById("sov").style.display="none";document.getElementById("dbwrap").style.display="block";}
+function openUpload(){
+  var u=curUrl;
+  if(demoMode||!u){alert("보고서 업로드 페이지는 mentor_upload.html 파일을 여세요.\n(같은 폴더에 있습니다)");return;}
+  window.open("mentor_upload.html","_blank");
+}
+
+async function load(url){
+  document.getElementById("larea").innerHTML='<div class="spin"></div><div>데이터 불러오는 중...</div>';
+  document.getElementById("larea").style.display="block";document.getElementById("darea").style.display="none";
+  try{
+    var r=await fetch(url+"?action=dashboard");
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    var d=await r.json();if(d.error)throw new Error(d.error);
+    render(d);
+    document.getElementById("larea").style.display="none";document.getElementById("darea").style.display="block";
+    document.getElementById("sinfo").textContent="마지막 동기화 "+new Date().toLocaleTimeString("ko-KR");
+  }catch(e){
+    document.getElementById("larea").innerHTML='<div style="color:var(--red);font-size:13px;text-align:center;">⚠ 로드 실패: '+e.message+'<br><br><button onclick="load(curUrl)" style="margin-top:8px;padding:6px 16px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;">다시 시도</button></div>';
+  }
+}
+
+function demo(){
+  curUrl="demo";demoMode=true;showDB();
+  render({
+    summary:{총기업수:6,평균출석률:82.7,누적멘토링:46,노쇼건수:1,총보고서수:18},
+    companies:[
+      {기업명:"에이아이랩㈜",분야:"AI·SW",담당멘토:"김멘토",멘토링횟수:12,출석률:98,KPI달성도:100,미팅완료:3,미팅예정:0,상태:"정상",보고서수:5},
+      {기업명:"그린에너지㈜",분야:"친환경",담당멘토:"이멘토",멘토링횟수:9,출석률:94,KPI달성도:78,미팅완료:1,미팅예정:1,상태:"정상",보고서수:4},
+      {기업명:"헬스케어플러스㈜",분야:"바이오",담당멘토:"박멘토",멘토링횟수:8,출석률:88,KPI달성도:72,미팅완료:2,미팅예정:1,상태:"정상",보고서수:3},
+      {기업명:"스마트팜㈜",분야:"애그테크",담당멘토:"최멘토",멘토링횟수:7,출석률:83,KPI달성도:65,미팅완료:1,미팅예정:2,상태:"정상",보고서수:3},
+      {기업명:"테크스타트㈜",분야:"플랫폼",담당멘토:"정멘토",멘토링횟수:4,출석률:58,KPI달성도:40,미팅완료:0,미팅예정:0,상태:"주의",보고서수:2},
+      {기업명:"핀테크원㈜",분야:"금융",담당멘토:"강멘토",멘토링횟수:6,출석률:75,KPI달성도:55,미팅완료:0,미팅예정:1,상태:"정상",보고서수:1},
+    ],
+    meetings:[{상태:"완료"},{상태:"완료"},{상태:"완료"},{상태:"완료"},{상태:"예정"},{상태:"예정"},{상태:"예정"}],
+    alerts:[
+      {기업명:"테크스타트㈜",알림유형:"노쇼경보",내용:"2회 연속 결석",처리결과:"멘토 연락 완료",알림일시:"2025-03-28"},
+      {기업명:"그린에너지㈜",알림유형:"투자미팅",내용:"KDB캐피탈 미팅 확정",처리결과:"4월 2일 14:00",알림일시:"2025-03-27"},
+      {기업명:"에이아이랩㈜",알림유형:"우수기업",내용:"KPI 100% 조기 달성",처리결과:"우수기업 선정",알림일시:"2025-03-25"},
+    ]
+  });
+  document.getElementById("larea").style.display="none";document.getElementById("darea").style.display="block";
+  document.getElementById("sinfo").textContent="📊 샘플 데이터 미리보기";
+}
+
+function render(d){
+  var s=d.summary;allCo=d.companies||[];
+  document.getElementById("k1").innerHTML=s.총기업수+'<span>개사</span>';
+  document.getElementById("k2").innerHTML=s.평균출석률+'<span>%</span>';
+  document.getElementById("k3").innerHTML=s.누적멘토링+'<span>회</span>';
+  document.getElementById("k4").innerHTML=s.노쇼건수+'<span>건</span>';
+  document.getElementById("k5").innerHTML=(s.총보고서수||0)+'<span>건</span>';
+  document.getElementById("k2s").textContent=s.평균출석률>=85?"▲ 양호":"▼ 개선 필요";
+  document.getElementById("k4s").textContent=s.노쇼건수>0?"⚠ 경보 발송":"✓ 없음";
+  document.getElementById("k1s").textContent="▲ 목표 100% 달성";
+  rCo(allCo);rAl(d.alerts||[]);rKpi(allCo);rAtt(allCo);rMtg(d.meetings||[]);
+}
+
+function rCo(list){
+  document.getElementById("cbody").innerHTML=list.map(function(c){
+    var pc=c.출석률>=80?'pg':c.출석률>=60?'pa':'prd';
+    var kc=c.KPI달성도>=80?'pg':c.KPI달성도>=60?'pa':'prd';
+    var st=c.상태==='정상'?'<span class="badge bb">정상</span>':'<span class="badge br">주의</span>';
+    var rp=c.보고서수>0?'<span class="badge by">'+c.보고서수+'건</span>':'<span style="font-size:11px;color:var(--muted);">없음</span>';
+    return '<tr class="click-row" onclick="openDetail(\''+c.기업명+'\')">'+
+      '<td><div class="cn">'+c.기업명+'</div><div class="cs">'+c.분야+' · '+c.담당멘토+'</div></td>'+
+      '<td style="text-align:center;font-weight:500;">'+c.멘토링횟수+'회</td>'+
+      '<td><div style="font-size:11px;font-weight:500;margin-bottom:3px;">'+c.출석률+'%</div><div class="pw"><div class="pb '+pc+'" style="width:'+Math.min(c.출석률,100)+'%"></div></div></td>'+
+      '<td><div style="font-size:11px;font-weight:500;margin-bottom:3px;">'+c.KPI달성도+'%</div><div class="pw"><div class="pb '+kc+'" style="width:'+Math.min(c.KPI달성도,100)+'%"></div></div></td>'+
+      '<td>'+rp+'</td>'+
+      '<td style="font-size:11px;color:var(--muted);">완료 '+c.미팅완료+'건<br>예정 '+c.미팅예정+'건</td>'+
+      '<td>'+st+'</td></tr>';
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px;">데이터 없음</td></tr>';
+}
+
+function fco(s,b){
+  document.querySelectorAll('.fb').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
+  rCo(s==='all'?allCo:allCo.filter(function(c){return c.상태===s;}));
+}
+
+function rAl(al){
+  if(!al.length){document.getElementById("alarea").innerHTML='<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px;">알림 없음</div>';return;}
+  var tm={"노쇼경보":"aw","출석경고":"aw","투자미팅":"aib","우수기업":"ao"};
+  var im={"노쇼경보":"⚠","출석경고":"⚠","투자미팅":"📅","우수기업":"🏆"};
+  document.getElementById("alarea").innerHTML=al.slice(0,4).map(function(a){
+    return '<div class="ai '+(tm[a.알림유형]||'aib')+'"><div class="aico">'+(im[a.알림유형]||'🔔')+'</div><div><div class="att">'+a.기업명+' — '+a.내용+'</div><div class="adc">'+a.처리결과+' · '+a.알림일시+'</div></div></div>';
+  }).join('');
+}
+
+function rKpi(c){
+  if(kC)kC.destroy();
+  kC=new Chart(document.getElementById("kc"),{type:'bar',data:{labels:c.map(function(x){return x.기업명.replace('㈜','');}),datasets:[{data:c.map(function(x){return x.KPI달성도;}),backgroundColor:c.map(function(x){return x.KPI달성도>=80?'#16A34A':x.KPI달성도>=60?'#D97706':'#DC2626';}),borderRadius:4,barPercentage:0.65}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94A3B8',font:{size:10}},grid:{display:false}},y:{min:0,max:110,ticks:{color:'#94A3B8',font:{size:10},callback:function(v){return v+'%';}},grid:{color:'#F1F5F9'}}}}});
+}
+function rAtt(c){
+  if(aC)aC.destroy();
+  aC=new Chart(document.getElementById("ac"),{type:'bar',data:{labels:c.map(function(x){return x.기업명.replace('㈜','');}),datasets:[{data:c.map(function(x){return x.출석률;}),backgroundColor:'rgba(37,99,235,0.15)',borderColor:'#2563EB',borderWidth:1.5,borderRadius:4,barPercentage:0.65}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94A3B8',font:{size:10}},grid:{display:false}},y:{min:0,max:110,ticks:{color:'#94A3B8',font:{size:10},callback:function(v){return v+'%';}},grid:{color:'#F1F5F9'}}}}});
+}
+function rMtg(m){
+  if(mC)mC.destroy();
+  var dn=m.filter(function(x){return x.상태==='완료';}).length;
+  var pl=m.filter(function(x){return x.상태==='예정';}).length;
+  var nn=Math.max(0,(allCo.length||0)-dn-pl);
+  mC=new Chart(document.getElementById("mc"),{type:'doughnut',data:{labels:['완료','예정','미진행'],datasets:[{data:[dn,pl,nn],backgroundColor:['#16A34A','#2563EB','#E2E8F0'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'right',labels:{color:'#64748B',font:{size:11},padding:12,usePointStyle:true,pointStyleWidth:8}}}}});
+}
+
+// ── 기업 상세 모달 ──────────────────────────────────────────
+var detailKpiChart=null, detailAttChart=null;
+
+function openDetail(companyName){
+  var co=allCo.filter(function(c){return c.기업명===companyName;})[0]||{};
+  document.getElementById("modalTitle").textContent=companyName;
+  document.getElementById("modalSub").textContent=(co.담당멘토||'')+" | "+(co.분야||'');
+  document.getElementById("modalBody").innerHTML='<div class="modal-spin"><div class="spin"></div></div>';
+  document.getElementById("modalBg").classList.add("open");
+  document.body.style.overflow="hidden";
+
+  if(demoMode){
+    renderDetailDemo(companyName,co);
+  } else {
+    fetchDetail(companyName,co);
+  }
+}
+
+async function fetchDetail(name,co){
+  try{
+    var r=await fetch(curUrl+"?action=companyDetail&company="+encodeURIComponent(name));
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    var d=await r.json();
+    if(d.error)throw new Error(d.error);
+    renderDetail(d,co);
+  }catch(e){
+    document.getElementById("modalBody").innerHTML='<div style="text-align:center;color:var(--red);padding:40px;font-size:13px;">⚠ '+e.message+'</div>';
+  }
+}
+
+function renderDetailDemo(name,co){
+  var demoDetail={
+    stats:{총교육횟수:10,출석횟수:co.출석률?Math.round(10*co.출석률/100):8,노쇼횟수:co.출석률<80?2:0,총보고서수:co.보고서수||3,완료미팅:co.미팅완료||1,예정미팅:co.미팅예정||1},
+    monthlyAttend:[{월:"2025-01",출석률:88},{월:"2025-02",출석률:co.출석률-4},{월:"2025-03",출석률:co.출석률}],
+    kpiTrend:[{날짜:"2025-01",kpi:Math.max(20,co.KPI달성도-40)},{날짜:"2025-02",kpi:Math.max(30,co.KPI달성도-20)},{날짜:"2025-03",kpi:co.KPI달성도}],
+    reports:[
+      {날짜:"2025-03-20",제목:"3월 3주차 멘토링 보고서",담당멘토:co.담당멘토||"김멘토",파일명:"report_202503_w3.pdf",파일URL:"#"},
+      {날짜:"2025-03-10",제목:"3월 2주차 멘토링 보고서",담당멘토:co.담당멘토||"김멘토",파일명:"report_202503_w2.pdf",파일URL:"#"},
+      {날짜:"2025-02-28",제목:"2월 월간 종합 보고서",담당멘토:co.담당멘토||"김멘토",파일명:"report_202502.pdf",파일URL:"#"},
+    ],
+    meetings:[
+      {미팅일자:"2025-03-15",투자사:"카카오벤처스",상태:"완료",투자금액:0,비고:"추가 자료 요청"},
+      {미팅일자:"2025-04-02",투자사:"KDB캐피탈",상태:"예정",투자금액:0,비고:"일정 확정"},
+    ]
+  };
+  renderDetail(demoDetail,co);
+}
+
+function renderDetail(d,co){
+  var s=d.stats||{};
+  var attend=d.monthlyAttend||[];
+  var kpiT=d.kpiTrend||[];
+  var reports=d.reports||[];
+  var meetings=d.meetings||[];
+
+  var html='';
+
+  // 요약 KPI
+  html+='<div class="modal-kgrid">';
+  html+='<div class="mkc"><div class="mkl">총 교육 횟수</div><div class="mkv">'+(s.총교육횟수||0)+'<span>회</span></div></div>';
+  html+='<div class="mkc"><div class="mkl">출석 / 노쇼</div><div class="mkv">'+(s.출석횟수||0)+'<span>회</span> <span style="color:var(--red);font-size:14px;">'+(s.노쇼횟수||0)+'<span style="font-size:12px;">노쇼</span></span></div></div>';
+  html+='<div class="mkc"><div class="mkl">멘토링 보고서</div><div class="mkv">'+(s.총보고서수||0)+'<span>건</span></div></div>';
+  html+='<div class="mkc"><div class="mkl">투자 미팅 완료</div><div class="mkv">'+(s.완료미팅||0)+'<span>건</span></div></div>';
+  html+='<div class="mkc"><div class="mkl">투자 미팅 예정</div><div class="mkv">'+(s.예정미팅||0)+'<span>건</span></div></div>';
+  html+='<div class="mkc"><div class="mkl">현재 상태</div><div class="mkv" style="font-size:14px;margin-top:4px;">'+(co.상태==='정상'?'<span class="badge bg">정상</span>':'<span class="badge br">관리필요</span>')+'</div></div>';
+  html+='</div>';
+
+  // 차트 영역
+  html+='<div class="modal-grid">';
+  html+='<div><div class="msec-title">월별 출석률 추이</div><div style="position:relative;height:160px;"><canvas id="dAttChart"></canvas></div></div>';
+  html+='<div><div class="msec-title">KPI 달성도 추이</div><div style="position:relative;height:160px;"><canvas id="dKpiChart"></canvas></div></div>';
+  html+='</div>';
+
+  // 멘토 보고서 목록
+  html+='<div class="modal-section"><div class="msec-title">📄 멘토 보고서 목록</div>';
+  if(reports.length){
+    reports.forEach(function(rp){
+      html+='<div class="report-item">';
+      html+='<div class="report-info"><div class="report-name">'+rp.제목+'</div>';
+      html+='<div class="report-meta">'+rp.날짜+' · '+rp.담당멘토+' · '+rp.파일명+'</div></div>';
+      if(rp.파일URL&&rp.파일URL!=='#'){
+        html+='<a class="report-dl" href="'+rp.파일URL+'" target="_blank">다운로드</a>';
+      } else {
+        html+='<span class="report-dl" style="opacity:0.4;cursor:default;">파일없음</span>';
+      }
+      html+='</div>';
+    });
+  } else {
+    html+='<div class="empty-state">등록된 보고서가 없습니다</div>';
+  }
+  html+='</div>';
+
+  // 투자 미팅 이력
+  html+='<div class="modal-section"><div class="msec-title">💼 투자사 미팅 이력</div>';
+  if(meetings.length){
+    html+='<div class="tw"><table><thead><tr><th>미팅일자</th><th>투자사</th><th>상태</th><th>비고</th></tr></thead><tbody>';
+    meetings.forEach(function(m){
+      var sb=m.상태==='완료'?'<span class="badge bg">완료</span>':'<span class="badge bb">예정</span>';
+      html+='<tr><td>'+m.미팅일자+'</td><td>'+m.투자사+'</td><td>'+sb+'</td><td style="color:var(--muted);font-size:11px;">'+m.비고+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+  } else {
+    html+='<div class="empty-state">등록된 미팅이 없습니다</div>';
+  }
+  html+='</div>';
+
+  document.getElementById("modalBody").innerHTML=html;
+
+  // 차트 그리기
+  if(detailAttChart)detailAttChart.destroy();
+  if(detailKpiChart)detailKpiChart.destroy();
+
+  if(attend.length){
+    detailAttChart=new Chart(document.getElementById("dAttChart"),{type:'line',
+      data:{labels:attend.map(function(a){return a.월.substring(5)+'월';}),
+        datasets:[{label:'출석률',data:attend.map(function(a){return a.출석률;}),
+          borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.08)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#2563EB'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:'#94A3B8',font:{size:10}},grid:{display:false}},
+          y:{min:0,max:110,ticks:{color:'#94A3B8',font:{size:10},callback:function(v){return v+'%';}},grid:{color:'#F1F5F9'}}}}});
+  }
+  if(kpiT.length){
+    detailKpiChart=new Chart(document.getElementById("dKpiChart"),{type:'line',
+      data:{labels:kpiT.map(function(k){return k.날짜;}),
+        datasets:[{label:'KPI',data:kpiT.map(function(k){return k.kpi;}),
+          borderColor:'#16A34A',backgroundColor:'rgba(22,163,74,0.08)',fill:true,tension:0.4,pointRadius:4,pointBackgroundColor:'#16A34A'}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:'#94A3B8',font:{size:10}},grid:{display:false}},
+          y:{min:0,max:110,ticks:{color:'#94A3B8',font:{size:10},callback:function(v){return v+'%';}},grid:{color:'#F1F5F9'}}}}});
+  }
+}
+
+function closeModal(e){if(e.target===document.getElementById("modalBg"))closeModalDirect();}
+function closeModalDirect(){
+  document.getElementById("modalBg").classList.remove("open");
+  document.body.style.overflow="";
+  if(detailAttChart)detailAttChart.destroy();
+  if(detailKpiChart)detailKpiChart.destroy();
+  detailAttChart=null;detailKpiChart=null;
+}
+
+setInterval(function(){if(curUrl&&!demoMode)load(curUrl);},5*60*1000);
+</script>
+</body>
+</html>
